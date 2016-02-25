@@ -1,0 +1,15 @@
+{
+  "name": "respondable",
+  "version": "0.0.1",
+  "description": "Utilizes matchMedia to performantly return conditional values based on media queries.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "responsive",
+    "matchMedia"
+  ],
+  "author": "Brandon Dail <brandon.dail@conciergeauctions.com>",
+  "license": "MIT"
+}
