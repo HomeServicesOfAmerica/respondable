@@ -168,6 +168,8 @@ function createQueryListener(id) {
      return MediaQueryListObject;
    });
 
+	 if (!state.active) state.active = 'default';
+
    var initialValue = values[state.active.media];
    if (initialValue === undefined) initialValue = defaultValue;
    callback(initialValue);
