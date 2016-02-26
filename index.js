@@ -22,7 +22,7 @@
    */
 
   function initialState(id, callback) {
-    const scopedState = {
+    var scopedState = {
       __uniqueID__: id,
       callback: callback,
       handlers: [],
