@@ -101,10 +101,7 @@
 
 function createQueryListener(id) {
     var listener = function (event) {
-			console.log('event passed to listener', event);
       var state = _state[id];
-			console.log('active is: ', state.active);
-      console.log(state);
       var defaultValue = state.defaultValue;
       var _values = state._values;
       var _MediaQueryLists = state._MediaQueryLists;
@@ -116,17 +113,13 @@ function createQueryListener(id) {
 
       if (isActive && !matches) {
         var valid = findValidActiveQuery(id);
-        console.log('new value', valid);
         var value = valid === 'default' ? defaultValue : _values[valid];
         state.active = valid === 'default' ? valid : _MediaQueryLists[valid];
-				console.log('validQuery as as active:', state.active);
         state.callback(value);
       }
 
       else if (matches) {
        state.active = event.target || event;
-			 console.log('the query passed to callback is', query);
-			 console.log('values are', _values);
        state.callback(_values[query]);
       }
     }
