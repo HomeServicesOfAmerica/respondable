@@ -25,30 +25,16 @@
     var scopedState = {
       __uniqueID__: id,
       callback: callback,
-      handlers: [],
       active: {},
       status: {},
       _MediaQueryLists: {},
       _rawMediaQueryLists: [],
       _values: {},
       queries: [],
-      handler: null,
       defaultValue: null
     }
     _state[id] = scopedState;
     return scopedState;
-  }
-
-
-  /**
-   * Registers a handler function. This is invoked
-   * whenever one of the MediaQueryList changes. It
-   * is passed the value matching the query, which
-   * is set in the `register` call.
-   * @param {Function} callback event handler
-   */
-  function addHandler(callback) {
-    handler = callback;
   }
 
   /**
@@ -143,7 +129,7 @@ function createQueryListener(id) {
   }
 
   /**
-   * Registers a map of queries and return values with the handler.
+   * Registers a map of queries and return values with the callback.
    * @param  {Object} values  key/value map of queries/return values
    */
   function mapValuesToQueryState(values, state, callback) {
