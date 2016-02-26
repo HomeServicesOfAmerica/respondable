@@ -11,34 +11,39 @@ respondable doesn't use any `resize` event handlers anywhere. Instead it relies 
 
 ## Usage
 
-You must first register an event handler with respondable.
 
 ```js
 
-import respondable from 'respondable';
+var map = {
+   '(min-width: 414px)': 'small',
+   '(min-width: 768px)': 'medium',
+   '(min-width: 1080px)': 'large',
+   '(min-width: 1400px)': 'extra-large',
+   default: 'default value'
+};
 
-respondable.addHandler((data) => {
-  // use the active data value here.
-})
-
-```
-
-
-You can then call `respondable.register` to pass a object mapping your queries and their return values.
-
-```js
-
-respondable.register({
-  '(min-width: 414px)': someDataSource.small,
-  '(min-width: 768px)': someDataSource.medium,
-  '(min-width: 1024px)': someDataSource.large,
+respondable(map, function(data) {
+  // use value here
 });
 
 ```
 
-Finally, you can call `respondable.destroy` to remove all the listeners registered with the `MediaQueryList` objects and reset all internal
-values to their defaults.
+A single function, `respondable`, is exported with the signature `respondable(values, callback)`, where `values` is your map of media queries
+and their respective values, and `callback` is the function invoked when those
+queries change.
 
+
+`respondable` returns an id that can be used to remove all the registered listeners for that scope by passing it to `respondable.destroy`
+
+```js
+
+var id = respondable(map, function(data) {
+  // use value here
+});
+
+respondable.destroy(id);
+
+```
 
 ## Example
 

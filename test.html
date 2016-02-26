@@ -5,50 +5,100 @@
      pre { background-color: #EEEEEE; }
     </style>
     <h1 id="output"></h1>
+    <h1 id="output2"></h1>
+    <h1 id="output3"></h1>
 
     <pre><code>
-      respondable.register({
+      var map = {
         '(min-width: 414px)': 'small',
         '(min-width: 768px)': 'medium',
         '(min-width: 1080px)': 'large',
         '(min-width: 1400px)': 'extra-large',
         default: 'default value'
+      };
+
+      var secondMap = {
+        '(min-width: 414px)': 'not large',
+        '(min-width: 768px)': 'extra medium',
+        '(min-width: 1080px)': 'not small',
+        '(min-width: 1400px)': 'extra-not small',
+        default: 'default valuez'
+      }
+
+
+      var first = respondable(map, function(data) {
+        output.innerHTML = data;
       });
+
+      var second = respondable(secondMap, function (data) {
+        output2.innerHTML = data;
+      });
+
+      destroy.onclick = function() {
+        respondable.destroy(first);
+      }
+
+      destroy2.onclick = function() {
+        respondable.destroy(second);
+      }
     </code></pre>
-    <button id="register">register</button>
-    <button id='destroy'>destroy</button>
+    <button id="destroy">destroy</button>
+    <button id='destroy2'>destroy II</button>
+    <button id='destroy3'>destroy III</button>
     <script src="index.js"></script>
     <script>
        var output = document.getElementById('output');
+       var output2 = document.getElementById('output2');
+       var output3 = document.getElementById('output3');
+
        var destroy = document.getElementById('destroy');
-       var register = document.getElementById('register');
+       var destroy2 = document.getElementById('destroy2');
+       var destroy3 = document.getElementById('destroy3');
+
+     var map = {
+       '(min-width: 414px)': 'small',
+       '(min-width: 768px)': 'medium',
+       '(min-width: 1080px)': 'large',
+       '(min-width: 1400px)': 'extra-large',
+       default: 'default value'
+     };
+
+     var secondMap = {
+       '(min-width: 414px)': 'not large',
+       '(min-width: 768px)': 'extra medium',
+       '(min-width: 1080px)': 'not small',
+       '(min-width: 1400px)': 'extra-not small',
+       default: 'default valuez'
+     }
+
+     var thirdMap = {
+       '(min-width: 414px)': 'pretty tiny',
+       '(min-width: 768px)': 'just right',
+       '(min-width: 1080px)': 'getting there',
+       '(min-width: 1400px)': 'watch out!',
+       default: 'default valuez'
+     }
 
 
-       function registerListeners() {
-         respondable.addHandler(function(result) {
-           output.innerHTML = result;
-         })
+     var first = respondable(map, function(data) {
+       output.innerHTML = data;
+     });
 
-         respondable.register({
-           '(min-width: 414px)': 'small',
-           '(min-width: 768px)': 'medium',
-           '(min-width: 1080px)': 'large',
-           '(min-width: 1400px)': 'extra-large',
-           default: 'default value'
-         });
-       }
+     var second = respondable(secondMap, function (data) {
+       output2.innerHTML = data;
+     });
 
-       registerListeners();
+     var third = respondable(thirdMap, function(data) {
+       output3.innerHTML = data;
+     })
 
+     destroy.onclick = function() {
+       respondable.destroy(first);
+     }
 
-       destroy.onclick = function() {
-         respondable.destroy();
-       }
-
-       register.onclick = function() {
-         registerListeners();
-       }
-
+     destroy2.onclick = function() {
+       respondable.destroy(second);
+     }
 
     </script>
   </body>

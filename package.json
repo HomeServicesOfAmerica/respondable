@@ -1,6 +1,6 @@
 {
   "name": "respondable",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Utilizes matchMedia to performantly return conditional values based on media queries.",
   "main": "index.js",
   "scripts": {

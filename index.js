@@ -1,15 +1,43 @@
 (function () {
 	'use strict';
 
-  var handlers = [];
-  var active = {};
-  var status = {};
-  var _MediaQueryLists = {};
-  var _rawMediaQueryLists = [];
-  var _values = {};
-  var queries = [];
-  var handler = null;
-  var defaultValue = null;
+  var _state = {};
+  var _listeners = {};
+
+  /**
+   * While not technically unique, there should be almost zero
+   * chance of collisions. Most pages shouldn't have more than
+   * a dozen instances of respondable at once.
+   * @return {[type]} [description]
+   */
+  function getUniqueID() {
+    return btoa(Math.random() * Math.random());
+  }
+
+
+  /**
+   * Returns a state object.
+   * @param  {String} id unique ID
+   * @return {Object}    state
+   */
+
+  function initialState(id, callback) {
+    const scopedState = {
+      __uniqueID__: id,
+      callback: callback,
+      handlers: [],
+      active: {},
+      status: {},
+      _MediaQueryLists: {},
+      _rawMediaQueryLists: [],
+      _values: {},
+      queries: [],
+      handler: null,
+      defaultValue: null
+    }
+    _state[id] = scopedState;
+    return scopedState;
+  }
 
 
   /**
@@ -69,10 +97,11 @@
    * @return {String} query description
    * @private
    */
-  function findValidActiveQuery() {
+  function findValidActiveQuery(id) {
     var valid = null;
-    queries.forEach(function(query) {
-    var isValid = status[query];
+    var state = _state[id];
+    state.queries.forEach(function(query) {
+    var isValid = state.status[query];
     if (isValid) {
       valid = query;
       return;
@@ -83,103 +112,135 @@
   }
 
 
-  /**
-   * Passed to MediaQuerylist.addListener. Invoked
-   * when the MediaQueryList.matches property changes.
-   * @param  {MediaQueryListEvent} event MediaQueryListEvent
-   * @private
-   */
-  function mediaQueryListener(event) {
-    var query = event.media;
-    status[query] = event.matches;
-    var matches = event.matches;
-    var isActive = query === active.media;
-    if (isActive && !matches) {
-      var valid = findValidActiveQuery();
-      var value = valid === 'default' ? defaultValue : _values[valid];
-      active = valid === 'default' ? valid : _MediaQueryLists[valid];
-      handler(value);
-    }
 
-    else if (matches) {
-     active = event.target;
-     handler(_values[query]);
+function createQueryListener(id) {
+    var listener = function (event) {
+      var state = _state[id];
+      console.log(state);
+      var defaultValue = state.defaultValue;
+      var _values = state._values;
+      var _MediaQueryLists = state._MediaQueryLists;
+      var query = event.media;
+      state.status[query] = event.matches;
+      var matches = event.matches;
+      var isActive = query === state.active.media;
+
+      if (isActive && !matches) {
+        var valid = findValidActiveQuery(id);
+        console.log('new value', valid);
+        var value = valid === 'default' ? defaultValue : _values[valid];
+        state.active = valid === 'default' ? valid : _MediaQueryLists[valid];
+        state.callback(value);
+      }
+
+      else if (matches) {
+       state.active = event.target;
+       state.callback(_values[query]);
+      }
     }
+    _listeners[id] = listener;
+    return listener;
   }
-
 
   /**
    * Registers a map of queries and return values with the handler.
    * @param  {Object} values  key/value map of queries/return values
    */
-  function register(values) {
+  function mapValuesToQueryState(values, state, callback) {
 
-
-   if (typeof handler !== 'function') {
-     throw new Error('Please register a handler function as `respondable.handler` before calling `respondable.register`.');
-   }
-
-   _values = values;
-   defaultValue = values.default;
+   var _values = state._values = values;
+   var defaultValue = state.defaultValue = values.default;
    delete values.default;
-   queries = Object.keys(values);
+   var queries = state.queries = Object.keys(values);
+   var _MediaQueryLists = state._MediaQueryLists;
+   var status = state.status;
+   var listener = createQueryListener(state.__uniqueID__);
 
-   _rawMediaQueryLists = queries.map(function(query) {
-
+   /* Map queries to MediaQueryList objects */
+   state._rawMediaQueryLists = queries.map(function(query) {
      var MediaQueryListObject = matchMedia(query);
      MediaQueryListObject._type = getType(query);
      MediaQueryListObject._value = getValue(query);
      _MediaQueryLists[query] = MediaQueryListObject;
      status[query] = MediaQueryListObject.matches;
-     if (MediaQueryListObject.matches) active = MediaQueryListObject;
-     MediaQueryListObject.addListener(mediaQueryListener);
+     if (MediaQueryListObject.matches) state.active = MediaQueryListObject;
+     MediaQueryListObject.addListener(listener);
      return MediaQueryListObject;
    });
 
-   var initialValue = values[active.media];
+   var initialValue = values[state.active.media];
    if (initialValue === undefined) initialValue = defaultValue;
-   handler(initialValue);
- };
+   callback(initialValue);
 
+ };
 
  /**
   * Invokes `removeListener` on all the MediaQueryList objects
   * that were created. Resets all internal values to their defaults.
   */
 
- function destroy() {
-   _rawMediaQueryLists.forEach(function(MediaQueryListObject) {
-     MediaQueryListObject.removeListener(mediaQueryListener);
+ function destroy(id) {
+   var state = _state[id];
+   var listener = _listeners[id];
+
+   if (!state) {
+     throw new Error('Unable to destroy respondable with id "' + id +
+      '": no respondable state found.');
+  }
+
+  if (!listener) {
+    throw new Error('Unable to destroy respondable with id "' + id +
+    '": no listener found.');
+  }
+
+   state._rawMediaQueryLists.forEach(function(MediaQueryListObject) {
+     MediaQueryListObject.removeListener(listener);
    });
+   delete _state[id];
+   return true;
+ }
 
-   handlers = [];
-   active = {};
-   status = {};
-   _MediaQueryLists = {};
-   _rawMediaQueryLists = [];
-   _values = {};
-   queries = [];
-   handler = null;
-   defaultValue = null;
-
+ /**
+  * Returns the global state if no id is provided. Otherwise returns
+  * the state for the passed id.
+  * @param  {String} id __uniqueID__
+  * @return {Object}    state
+  */
+ function getState(id) {
+   if (id) return _state[id];
+   return _state;
  }
 
 
-  var respondable =  {
-    register,
-    destroy,
-    addHandler,
-    handlers,
-    active,
-    status,
-    _MediaQueryLists,
-    queries,
-    handler,
-    defaultValue
+ /**
+  * Main entry point for respondable. Takes the map of queries/values
+  * and the callback function and registers them via MapValuesToState.
+  * @param  {Object}   values   queries and values
+  * @param  {Function} callback
+  * @return {String}            __uniqueID__
+  */
+ function respondable(values, callback) {
+
+   if (!values || typeof values !== 'object') {
+      throw new Error('respondable requires an object as its first argument.');
+    }
+
+    if (!callback || typeof callback !== 'function') {
+      throw new Error('respondable requiers a callback function as its' +
+      'second argument');
+    }
+
+    var __uniqueID__ = getUniqueID();
+    var state = initialState(__uniqueID__, callback);
+    mapValuesToQueryState(values, state, callback);
+    return __uniqueID__;
   }
 
+  /* Register `destroy` and `state` as public methods */
+  respondable.destroy = destroy;
+  respondable.state = getState;
 
-
+  /* Export! */
 	if (typeof module !== 'undefined' && module.exports) {
 		module.exports = respondable;
 	} else if (typeof define === 'function' && typeof define.amd === 'object' && define.amd) {
