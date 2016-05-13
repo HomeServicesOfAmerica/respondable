@@ -171,14 +171,21 @@ function createQueryListener(id) {
    var state = _state[id];
    var listener = _listeners[id];
 
+
    if (!state) {
-     throw new Error('Unable to destroy respondable with id "' + id +
-      '": no respondable state found.');
+     	if (process.env.NODE_ENV !== 'production') {
+ 			 console.warn('Unable to destroy respondable with id "' + id +
+	      '": no respondable state found.')
+ 		 }
+		 return;
   }
 
   if (!listener) {
-    throw new Error('Unable to destroy respondable with id "' + id +
-    '": no listener found.');
+		if (process.env.NODE_ENV !== 'production') {
+		 console.warn('Unable to destroy respondable with id "' + id +
+     '": no listener found.')
+	 }
+	 return;
   }
 
    state._rawMediaQueryLists.forEach(function(MediaQueryListObject) {
