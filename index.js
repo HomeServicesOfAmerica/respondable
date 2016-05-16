@@ -3,17 +3,7 @@
 
   var _state = {};
   var _listeners = {};
-
-  /**
-   * While not technically unique, there should be almost zero
-   * chance of collisions. Most pages shouldn't have more than
-   * a dozen instances of respondable at once.
-   * @return {[type]} [description]
-   */
-  function getUniqueID() {
-    return btoa(Math.random() * Math.random());
-  }
-
+	var id = 0;
 
   /**
    * Returns a state object.
@@ -225,7 +215,7 @@ function createQueryListener(id) {
       'second argument');
     }
 
-    var __uniqueID__ = getUniqueID();
+    var __uniqueID__ = id++;
     var state = initialState(__uniqueID__, callback);
     mapValuesToQueryState(values, state, callback);
     return __uniqueID__;
