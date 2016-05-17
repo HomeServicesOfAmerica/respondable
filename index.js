@@ -89,6 +89,12 @@
 
 
 
+/**
+ * Creates a listener function that is responsable invoking
+ * the `state.callback` function when a query is matched
+ * @param  {String} id
+ * @return {Function}    queryListener
+ */
 function createQueryListener(id) {
     var listener = function (event) {
       var state = _state[id];
