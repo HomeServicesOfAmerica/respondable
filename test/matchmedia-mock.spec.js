@@ -1,5 +1,5 @@
 import test from 'ava';
-import matchMedia from './matchmedia-polyfill-test';
+import matchMedia from './matchmedia-mock';
 
 test('matchMedia polyfill for testing', (t) => {
   t.plan(9);

@@ -1,5 +1,5 @@
 import test from 'ava';
-import matchMedia from './matchmedia-polyfill-test';
+import matchMedia from './matchmedia-mock';
 import {
   state,
   destroy,
