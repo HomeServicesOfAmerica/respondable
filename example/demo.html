@@ -1,0 +1,99 @@
+<html>
+  <body>
+    <script src='../lib/index.js'></script>
+    <style>
+      body, html {
+        margin: 0;
+        padding: 15px;
+      }
+      h1 {
+        display: inline;
+        font-family: Arial;
+        opacity: .85;
+        text-decoration: underline;
+      }
+      button {
+        display: inline;
+        position: relative;
+        float: right;
+        line-height: 23px;
+        font-size: 16px;
+        padding: 5px;
+        width: 100px;
+        text-align: center;
+      }
+      h2 { opacity: .7; }
+      pre { background-color: #EEEEEE; }
+      div { overflow: hidden }
+      </style>
+    <button id='destroy0'>Destroy</button><h1> One: </h1><br><h2 id='output0'></h2><br><br>
+    <button id='destroy1'>Destroy</button><h1> Two: </h1><br><h2 id='output1'></h2><br><br>
+    <br>
+    <center> The code below is editable! :)</center>
+    <pre>
+      <code>
+        <div contenteditable id=instance0>
+  // Supports a set of breakpoints
+  var oneBreakpoints = {
+    'screen and (max-width: 413px)': 'smallest',
+    'screen and (min-width: 414px) and (max-width: 767px)': 'small',
+    'screen and (min-width: 768px) and (max-width: 1079px)': 'medium',
+    'screen and (min-width: 1080px) and (max-width: 1399px)': 'large',
+    'screen and (min-width: 1400px)': 'largest',
+  };
+        </div>
+        <div contenteditable id=instance1>
+  // Correctly handles competing breakpoints
+  // NOTE: This would select only the largest query in a previous version.
+  var twoBreakpoints = {
+    'screen and (max-width: 413px)': 'smallest',
+    'screen and (min-width: 414px)': 'small',
+    'screen and (min-width: 768px)': 'medium',
+    'screen and (min-width: 1080px)': 'large',
+    'screen and (min-width: 1400px)': 'largest',
+  };
+        </div>
+        <script>
+
+        var destroyNew = null;
+        var destroy = null;
+
+        function resetAll(){
+          destroyNew();
+          destroy();
+          setupAll();
+        }
+
+        function setupAll() {
+          destroyFns = [];
+          eval(document.getElementById('instance0').innerHTML);
+          eval(document.getElementById('instance1').innerHTML);
+
+          // Make matching queries show up in document
+          destroyNew = respondable.next(oneBreakpoints, function(data) {
+            document.getElementById('output0').innerHTML = JSON.stringify(data);
+          });
+
+          var respondableID = respondable(twoBreakpoints, function(data) {
+            document.getElementById('output1').innerHTML = JSON.stringify(data);
+          });
+          destroy = function() {
+            respondable.destroy(respondableID);
+          }
+
+          // Set up destroy buttons.
+          document.getElementById('destroy0').onclick = destroyNew;
+          document.getElementById('destroy1').onclick = destroy;
+        }
+
+        // Make editable code do something
+        document.getElementById('instance0').addEventListener('blur', resetAll);
+        document.getElementById('instance1').addEventListener('blur', resetAll);
+
+        setupAll();
+
+        </script>
+      </pre>
+    </code>
+  </body>
+</html>
