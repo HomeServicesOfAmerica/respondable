@@ -7,7 +7,7 @@ respondable doesn't use any `resize` event handlers. Instead it relies on the `a
 **Note: `matchMedia` is a hard dependency of respondable. It will only work in instances where both `matchMedia` and `matchMedia.addListener` are supported. (Polyfills are available.)**
 
 
-# Table of contents
+## Table of contents
   1. [Installation](#installation)
   2. [Changelog](#changelog)
   3. [Documentation](#documentation)
@@ -16,18 +16,18 @@ respondable doesn't use any `resize` event handlers. Instead it relies on the `a
   6. [Contributing](#contributing)
 
 
-# Installation
+## Installation
 
 `$ npm install --save respondable`
 
-### Changelog
+## Changelog
 > `respondable.next` has been exposed and will take the place of `respondable` in the next release.
 
 > Support for default value as a property of the `breakpoints` object has been deprecated. (See Best Practices for more details.)
 
 > Respondable had been passing the value of a single query into the callback when multiple queries matched. Now an array of all matching values will be passed in to the callback.
 
-# Documentation
+## Documentation
 
 ### respondable.next
 > `respondable.next` is the recommended implementation of respondable. It will be available as `respondable` in the next release.
@@ -37,12 +37,12 @@ respondable doesn't use any `resize` event handlers. Instead it relies on the `a
 
 Creates a MediaQueryObjectList for each media query in `breakpoints`. A query becoming active or innactive will invoke `callback`. The callback will also be invoked upon initialization. Callback will recieve all of the values associated with the active mediaqueries.
 
-##### breakpoints <object>
+#### breakpoints <object>
 
 - Keys: Must be media queries excluding the leading characters `@media` as per [matchMedia](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia) specs.
 - Values: Consumers discretion.
 
-##### callback <function>
+#### callback <function>
 
 - Parameter: `values`
 
@@ -113,7 +113,7 @@ respondable.destroy(respondableID);
 
 Clone this repo and open `example/demo.html` in your browser to test it out.
 
-# Contributing
+## Contributing
 Contributions are welcome! Should you decide to contribute we ask you:
 - Write code that our linter doesn't hate.
 - Write tests that cover any new code and update tests if changes were made to existing code. Code coverage should stay above 90%.
