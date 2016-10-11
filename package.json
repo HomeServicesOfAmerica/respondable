@@ -2,20 +2,59 @@
   "name": "respondable",
   "version": "0.1.4",
   "description": "Utilizes matchMedia to performantly return conditional values based on media queries.",
-  "main": "index.js",
+  "main": "dist/index.min.js",
   "scripts": {
-    "test": "mocha test",
-    "build": "uglify index.js -o index.min.js"
+    "clean": "rimraf ./lib ./dist ./coverage ./.nyc_output",
+    "coverage-report": "nyc report --reporter=html",
+    "compile": "mkdir lib && browserify ./src/index.js -s respondable -o lib/index.js -t [ babelify --presets [ es2015 stage-0 stage-1 ] ]",
+    "uglify": "mkdir dist && uglifyjs ./lib/index.js -o ./dist/index.min.js",
+    "lint": "eslint src/index.js test",
+    "build": "npm run clean && npm run compile && npm run lint && npm test && npm run uglify",
+    "build:watch": "nodemon -i lib -i dist --exec  npm run build",
+    "test": "nyc ava",
+    "test:watch": "nyc ava --watch"
+  },
+  "ava": {
+    "source": "src",
+    "files": "test/*.spec.js",
+    "require": [
+      "babel-register"
+    ],
+    "babel": "inherit"
+  },
+  "nyc": {
+    "exclude": [
+      "**/*.spec.js",
+      "node_modules",
+      "lib",
+      "dist",
+      "example",
+      "coverage"
+    ]
   },
   "keywords": [
     "responsive",
-    "matchMedia"
+    "matchMedia",
+    "breakpoint"
   ],
   "author": "Brandon Dail <brandon.dail@conciergeauctions.com>",
   "license": "MIT",
   "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^2.4.5",
+    "ava": "^0.16.0",
+    "babel-eslint": "^7.0.0",
+    "babel-polyfill": "^6.16.0",
+    "babel-preset-es2015": "^6.1.4",
+    "babel-preset-stage-0": "^6.16.0",
+    "babel-preset-stage-1": "^6.16.0",
+    "babelify": "^7.3.0",
+    "browserify": "^13.1.0",
+    "eslint": "^3.7.1",
+    "eslint-config-airbnb": "^12.0.0",
+    "eslint-plugin-import": "^2.0.0",
+    "nodemon": "^1.11.0",
+    "nyc": "^8.3.1",
+    "rewire": "^2.5.2",
+    "rimraf": "^2.5.4",
     "uglify-js": "^2.6.2"
   }
 }
