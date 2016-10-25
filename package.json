@@ -37,7 +37,10 @@
     "matchMedia",
     "breakpoint"
   ],
-  "author": "Brandon Dail <brandon.dail@conciergeauctions.com>",
+  "contributors": [
+    "Brandon Dail <cottoncrypt@gmail.com>",
+    "Nathan Schwartz <nathan.schwartz95@gmail.com>"
+  ],
   "license": "MIT",
   "devDependencies": {
     "ava": "^0.16.0",
