@@ -1,11 +1,8 @@
 import test from 'ava';
 import matchMedia from './matchmedia-mock';
 import {
-  state,
   destroy,
-  destroyNext,
   respondable,
-  respondableNext,
   findMatches,
   createQueryChangeHandler,
   mapMediaQueryLists,
@@ -28,75 +25,51 @@ test('index.js', (t) => {
   t.is(respondableExport, respondable);
 });
 
-test('respondableNext', (t) => {
-  t.plan(6);
-  t.true(typeof respondableNext === 'function');
-
-  // Respondable should export next unmodified and as a property of respondable
-  t.is(respondableNext, respondable.next);
-
-  // Checking argument validation
-  t.throws(() => respondableNext(undefined, () => {}), 'Respondable requires an object as its first argument.');
-  t.throws(() => respondableNext({}, undefined), 'Respondable requires a callback function as its second argument');
-  t.throws(() => respondableNext({}, () => {}, {}), 'Respondable has an optional third parameter for matchMediaPolyFill of type function.');
-
-  // Check that resondableNext is returning a destroy function.
-  const destroyIt = respondableNext(breakpoints, () => {}, matchMedia);
-  t.true(typeof destroyIt === 'function');
-});
-
-test.serial('respondable', (t) => {
-  t.plan(12 + Object.keys(breakpoints).length);
-
-  const fakeCallback = () => {};
-
-  // Verify state is empty
-  t.deepEqual(state, { instances: {}, nextInstanceID: 0 });
+test('respondable', (t) => {
+  t.plan(7);
   t.true(typeof respondable === 'function');
 
   // Checking argument validation
   t.throws(() => respondable(undefined, () => {}), 'Respondable requires an object as its first argument.');
   t.throws(() => respondable({}, undefined), 'Respondable requires a callback function as its second argument');
-  t.throws(() => respondable({}, () => {}, {}), 'Respondable has an optional third parameter for matchMediaPolyFill of type function.');
 
-  const respondableID = respondable(breakpoints, fakeCallback, matchMedia);
+  // If window is undefined throw error.
+  t.throws(() => respondable({}, () => {}), 'Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not supported in this browser.');
 
-  // Respondable should return a number type ID that is a key for the new instance.
-  t.true(typeof respondableID === 'number');
-  t.truthy(state.instances[String(respondableID)]);
-  const instance = state.instances[String(respondableID)];
+  // If window.matchMedia is undefined throw error.
+  global.window = {};
+  t.throws(() => respondable({}, () => {}), 'Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not supported in this browser.');
 
-  // The instance should have be an object and have a three properties.
-  t.true(typeof instance === 'object');
-  t.is(state.nextInstanceID, respondableID + 1);
-  t.is(instance.onChangeCb, fakeCallback);
-  t.true(typeof instance.listenerCb === 'function');
-  t.true(Array.isArray(instance.queries));
+  // If all arguments are correct and window.matchMedia is defined, don't throw error.
+  global.window = { matchMedia };
+  t.notThrows(() => respondable({}, () => {}), 'Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not supported in this browser.');
 
-  // instance.query is created by mapMediaQueryLists
-  // Doing a basic test to confirm.
-  for (const mockMQ of instance.queries) {
-    t.is(breakpoints[mockMQ.query], mockMQ.value);
-  }
+  // Check that respondable is returning a destroy function.
+  const destroyIt = respondable(breakpoints, () => {});
+  t.true(typeof destroyIt === 'function');
 });
 
-test('destroyNext', (t) => {
-  t.plan(5 + (Object.keys(breakpoints).length * 2));
+test('destroy', (t) => {
+  t.plan(6 + (Object.keys(breakpoints).length * 2));
 
-  // Respondable should return a function. It is a wrapper for destroyNext
-  t.true(typeof respondableNext === 'function');
-  const destroyIt = respondableNext(breakpoints, () => {}, matchMedia);
+  // Respondable should return a function. It is a wrapper for destroy
+  t.true(typeof respondable === 'function');
+  const destroyIt = respondable(breakpoints, () => {});
   t.true(typeof destroyIt === 'function');
+  t.true(String(destroyIt).includes('destroy('));
 
   /* eslint-disable no-unused-vars */
   let calledCount;
   let calledWith;
-  /* eslint-disable no-unused-vars */
+  /* eslint-enable no-unused-vars */
 
-  // Mock an instance in state
+  // Mock the query change handler
   const queryChangeHandler = () => {};
+
   // Keep a reference to query property so we can test that listeners were destroyed
   const mockMQL = mapMediaQueryLists(breakpoints, queryChangeHandler, matchMedia);
+
+  // Mock an instance in state
   const instance = {
     queries: mockMQL,
     onChangeCb: (...args) => {
@@ -111,10 +84,10 @@ test('destroyNext', (t) => {
     t.is(mockMQ.listeners.length, 1);
   }
 
-  const successWrong = destroyNext();
+  const successWrong = destroy();
   t.false(successWrong);
 
-  const successCorrect = destroyNext(instance);
+  const successCorrect = destroy(instance);
   t.true(successCorrect);
 
   // All MQ objects should have no listeners
@@ -124,28 +97,6 @@ test('destroyNext', (t) => {
 
   // All keys should be deleted
   t.is(Object.keys(instance).length, 0);
-});
-
-test.serial('respondable.destroy', (t) => {
-  t.true(typeof destroy === 'function');
-
-  // Respondable should export destroy unmodified and as a property of respondable
-  t.is(respondable.destroy, destroy);
-
-  // respondable should return a numeric ID tied to a instance in state.
-  const respondableID = respondable(breakpoints, () => {}, matchMedia);
-  t.true(typeof respondableID === 'number');
-  t.true(typeof state.instances[respondableID] === 'object');
-
-  // Should fail if not passed a valid ID
-  const successWrong = destroy();
-  t.false(successWrong);
-  t.true(typeof state.instances[respondableID] === 'object');
-
-  // Should delete instance if passed a valid ID
-  const successCorrect = destroy(respondableID);
-  t.true(successCorrect);
-  t.true(typeof state.instances[respondableID] === 'undefined');
 });
 
 test('mapMediaQueryLists', (t) => {

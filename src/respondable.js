@@ -1,9 +1,3 @@
-// Store all instances for reverse compatibility (not used by respondableNext)
-export const state = {
-  instances: {},
-  nextInstanceID: 0,
-};
-
 /**
 * Recieves an instance as its only parameter.
 * Returns a list of the values associated with the instance's matching queries.
@@ -22,7 +16,6 @@ export function findMatches(instance) {
   instance.onChangeCb(matches);
   return matches;
 }
-
 
 /**
  * Creates a onChange handler for resizes that change the activate / deactivate a media query.
@@ -66,7 +59,7 @@ export function mapMediaQueryLists(values, queryChangeHandler, matchMedia) {
  * Takes in an instance object that was created inside of respondable.
  * @param {Object} instance
  */
-export function destroyNext(instance) {
+export function destroy(instance) {
   if (instance && Object.keys(instance).length) {
     // Remove the listener for each MediaQueryList tied to this instance
     for (const mq of instance.queries) {
@@ -76,28 +69,6 @@ export function destroyNext(instance) {
     for(const key of Object.keys(instance)) {
       delete instance[key];
     }
-    return true
-  } else {
-    console.warn(`This instance has already been destroyed.`);
-    return false;
-  }
-}
-
-/**
- * Takes in an instance object that was created inside of respondable.
- * @param {Object} instance
- */
-export function destroy(id) {
-  if (id !== undefined && state.instances[String(id)]) {
-
-    const instance = state.instances[String(id)];
-
-    // Remove the listener for each MediaQueryList tied to this instance
-    for (const mq of instance.queries) {
-      mq.removeListener(instance.listenerCb);
-    }
-
-    delete state.instances[String(id)];
     return true;
   } else {
     console.warn(`This instance has already been destroyed.`);
@@ -112,7 +83,7 @@ export function destroy(id) {
  * @param {Function} callback
  * @return {String} instanceID
  */
-export function respondableNext(values, onChangeCb, matchMediaPolyFill) {
+export function respondable(values, onChangeCb) {
   if (!values || typeof values !== 'object') {
     throw new Error(`Respondable requires an object as its first argument.`);
   }
@@ -121,12 +92,9 @@ export function respondableNext(values, onChangeCb, matchMediaPolyFill) {
     throw new Error(`Respondable requires a callback function as its second argument`);
   }
 
-  if (matchMediaPolyFill !== undefined && typeof matchMediaPolyFill !== 'function') {
-    throw new Error(`Respondable has an optional third parameter for matchMediaPolyFill of type function.`);
+  if(typeof window !== 'object' || !window.matchMedia) {
+    throw new Error(`Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not supported in this browser.`);
   }
-
-  // Determine if matchMedia is being polyfilled (for testing or bad browsers)
-  const matchMedia = typeof window === 'object' && window.matchMedia ? window.matchMedia : matchMediaPolyFill;
 
   // Create instance
   const instance = {};
@@ -139,61 +107,11 @@ export function respondableNext(values, onChangeCb, matchMediaPolyFill) {
 
   // mapMediaQueryLists will register listenerCb with all the queries
   // present (as keys) in the values object that was passed in.
-  instance.queries = mapMediaQueryLists(values, instance.listenerCb, matchMedia);
+  instance.queries = mapMediaQueryLists(values, instance.listenerCb, window.matchMedia);
 
   // This method will find all active queries.
   // It is more expensive than the method used in 'createQueryChangeHandler'
   findMatches(instance);
 
-  return () => destroyNext(instance);
+  return () => destroy(instance);
 }
-
-/**
- * Main entry point for respondable. Takes the map of queries:values
- * and the callback function and registers listeners for each breakpoint.
- * @param {Object} queries and values
- * @param {Function} callback
- * @return {String} instanceID
- */
-export function respondable(values, onChangeCb, matchMediaPolyFill) {
-  if (!values || typeof values !== 'object') {
-    throw new Error(`Respondable requires an object as its first argument.`);
-  }
-
-  if (!onChangeCb || typeof onChangeCb !== 'function') {
-    throw new Error(`Respondable requires a callback function as its second argument`);
-  }
-
-  if (matchMediaPolyFill !== undefined && typeof matchMediaPolyFill !== 'function') {
-    throw new Error(`Respondable has an optional third parameter for matchMediaPolyFill of type function.`);
-  }
-
-  // Determine if matchMedia is being polyfilled (for testing or bad browsers)
-  const matchMedia = typeof window === 'object' && window.matchMedia ? window.matchMedia : matchMediaPolyFill;
-
-  // Create instance
-  const instance = {};
-
-  // Create a handler for matchMedia when a query's 'active' state changes
-  instance.listenerCb = createQueryChangeHandler(findMatches, instance);
-
-  // Callback passed in by user. Made a property for convenience
-  instance.onChangeCb = onChangeCb;
-
-  // mapMediaQueryLists will register listenerCb with all the queries
-  // present (as keys) in the values object that was passed in.
-  instance.queries = mapMediaQueryLists(values, instance.listenerCb, matchMedia);
-
-  // This method will find all active queries.
-  // It is more expensive than the method used in 'createQueryChangeHandler'
-  findMatches(instance);
-
-  state.instances[String(state.nextInstanceID)] = instance;
-  state.nextInstanceID += 1;
-
-  console.warn(`This method will behave differently in the next release. The new implementation is available as 'respondable.next'. Note that 'respondable.next' will not be deprecated in the next version.`);
-  return state.nextInstanceID - 1;
-}
-
-respondable.next = respondableNext;
-respondable.destroy = destroy;

@@ -26,15 +26,15 @@
       pre { background-color: #EEEEEE; }
       div { overflow: hidden }
       </style>
-    <button id='destroy0'>Destroy</button><h1> One: </h1><br><h2 id='output0'></h2><br><br>
-    <button id='destroy1'>Destroy</button><h1> Two: </h1><br><h2 id='output1'></h2><br><br>
+    <button id='destroy1'>Destroy</button><h1> One: </h1><br><h2 id='output1'></h2><br><br>
+    <button id='destroy2'>Destroy</button><h1> Two: </h1><br><h2 id='output2'></h2><br><br>
     <br>
     <center> The code below is editable! :)</center>
     <pre>
       <code>
-        <div contenteditable id=instance0>
+        <div contenteditable id=instance1>
   // Supports a set of breakpoints
-  var oneBreakpoints = {
+  var one = {
     'screen and (max-width: 413px)': 'smallest',
     'screen and (min-width: 414px) and (max-width: 767px)': 'small',
     'screen and (min-width: 768px) and (max-width: 1079px)': 'medium',
@@ -42,10 +42,10 @@
     'screen and (min-width: 1400px)': 'largest',
   };
         </div>
-        <div contenteditable id=instance1>
+        <div contenteditable id=instance2>
   // Correctly handles competing breakpoints
   // NOTE: This would select only the largest query in a previous version.
-  var twoBreakpoints = {
+  var two = {
     'screen and (max-width: 413px)': 'smallest',
     'screen and (min-width: 414px)': 'small',
     'screen and (min-width: 768px)': 'medium',
@@ -55,40 +55,36 @@
         </div>
         <script>
 
-        var destroyNew = null;
-        var destroy = null;
+        var destroy1 = null;
+        var destroy2 = null;
 
         function resetAll(){
-          destroyNew();
-          destroy();
+          destroy1();
+          destroy2();
           setupAll();
         }
 
         function setupAll() {
-          destroyFns = [];
-          eval(document.getElementById('instance0').innerHTML);
           eval(document.getElementById('instance1').innerHTML);
+          eval(document.getElementById('instance2').innerHTML);
 
           // Make matching queries show up in document
-          destroyNew = respondable.next(oneBreakpoints, function(data) {
-            document.getElementById('output0').innerHTML = JSON.stringify(data);
-          });
-
-          var respondableID = respondable(twoBreakpoints, function(data) {
+          var destroy1 = respondable(one, function(data) {
             document.getElementById('output1').innerHTML = JSON.stringify(data);
           });
-          destroy = function() {
-            respondable.destroy(respondableID);
-          }
+
+          var destroy2 = respondable(two, function(data) {
+            document.getElementById('output2').innerHTML = JSON.stringify(data);
+          });
 
           // Set up destroy buttons.
-          document.getElementById('destroy0').onclick = destroyNew;
-          document.getElementById('destroy1').onclick = destroy;
+          document.getElementById('destroy1').onclick = destroy1;
+          document.getElementById('destroy2').onclick = destroy2;
         }
 
         // Make editable code do something
-        document.getElementById('instance0').addEventListener('blur', resetAll);
         document.getElementById('instance1').addEventListener('blur', resetAll);
+        document.getElementById('instance2').addEventListener('blur', resetAll);
 
         setupAll();
 
