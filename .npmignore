@@ -1,0 +1,14 @@
+example
+lib
+node_modules
+src
+test
+coverage
+.nyc_output
+.babelrc
+.eslintrc.yml
+.editorconfig
+.eslintignore
+.gitignore
+.nvmrc
+.travis.yml
