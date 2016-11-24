@@ -4,15 +4,14 @@
   "description": "Utilizes matchMedia to performantly return conditional values based on media queries.",
   "main": "dist/index.min.js",
   "scripts": {
-    "clean": "rimraf ./lib ./dist ./coverage ./.nyc_output",
+    "clean": "rimraf ./dist ./coverage ./.nyc_output",
     "coverage-report": "nyc report --reporter=html",
-    "compile": "mkdir lib && browserify ./src/index.js -s respondable -o lib/index.js -t [ babelify --presets [ es2015 stage-0 stage-1 ] ]",
-    "uglify": "mkdir dist && uglifyjs ./lib/index.js -o ./dist/index.min.js",
-    "lint": "eslint src/index.js test",
-    "build": "npm run clean && npm run compile && npm run lint && npm test && npm run uglify",
-    "build:watch": "nodemon -i lib -i dist --exec  npm run build",
+    "compile": "mkdir dist && browserify ./src/index.js -s respondable -o dist/index.min.js -t [ babelify --presets [ es2015 stage-0 stage-1 babili ] ]",
+    "lint": "eslint src test",
+    "build": "npm run clean && npm run compile && npm run lint && npm test",
+    "build:watch": "nodemon -i dist --exec  npm run build",
     "test": "nyc ava",
-    "test:watch": "nyc ava --watch"
+    "test:watch": "nodemon --exec nyc ava"
   },
   "ava": {
     "source": "src",
@@ -26,7 +25,6 @@
     "exclude": [
       "**/*.spec.js",
       "node_modules",
-      "lib",
       "dist",
       "example",
       "coverage"
@@ -50,6 +48,7 @@
     "babel-preset-stage-0": "^6.16.0",
     "babel-preset-stage-1": "^6.16.0",
     "babelify": "^7.3.0",
+    "babili": "0.0.9",
     "browserify": "^13.1.0",
     "eslint": "^3.7.1",
     "eslint-config-airbnb": "^12.0.0",
@@ -57,7 +56,6 @@
     "nodemon": "^1.11.0",
     "nyc": "^8.3.1",
     "rewire": "^2.5.2",
-    "rimraf": "^2.5.4",
-    "uglify-js": "^2.6.2"
+    "rimraf": "^2.5.4"
   }
 }

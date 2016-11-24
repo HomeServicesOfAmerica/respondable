@@ -4,7 +4,7 @@
 * @param {Object} instance
 * @return {Array} matches
 */
-export function findMatches(instance) {
+export function findMatches(instance, priority) {
   const matches = [];
   for (const query of instance.queries) {
     if (query.matches) {
@@ -12,9 +12,11 @@ export function findMatches(instance) {
     }
   }
 
-  // Send matching values to user
-  instance.onChangeCb(matches);
-  return matches;
+  // If there are no matches, return -1, otherwise the smallest index.
+  const winnerIndex = matches.length ? Math.min(...matches.map(m => priority.indexOf(m))) : -1;
+
+  instance.onChangeCb(matches, priority[winnerIndex]);
+  return { matches, priority: priority[winnerIndex] };
 }
 
 /**
@@ -23,10 +25,10 @@ export function findMatches(instance) {
  * @param {Object} instance
  * @return {Function} handler
  */
-export function createQueryChangeHandler(findMatches, instance) {
+export function createQueryChangeHandler(findMatches, instance, priority) {
   return function handler() {
-    if (instance) {
-      return findMatches(instance);
+    if (instance && Object.keys(instance).length) {
+      return findMatches(instance, priority);
     }
   };
 }
@@ -55,6 +57,40 @@ export function mapMediaQueryLists(values, queryChangeHandler, matchMedia) {
   });
 }
 
+export function validateInput(values, onChangeCb, priority) {
+  if (!values || typeof values !== 'object') {
+    throw new Error(`Respondable requires an object as its first argument.`);
+  }
+
+  if (typeof onChangeCb !== 'function') {
+    throw new Error(`Respondable requires a callback function as its second argument`);
+  }
+  // console.log('window', global.window);
+  if (typeof window !== 'object' || typeof window.matchMedia !== 'function') {
+    throw new Error(`Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not supported in this browser.`);
+  }
+
+  if (!Array.isArray(priority)) {
+    throw new Error(`Respondable's third argument must be an array, if used.`);
+  }
+
+  if (priority.length) {
+    const prioritySorted = priority.slice().sort();
+    const keysSorted = Object.keys(values).map(k => values[k]).sort();
+
+    if (prioritySorted.length !== keysSorted.length) {
+      throw new Error(`The priority array's values didn't correspond to the values of the breakpoint map.`);
+    }
+
+    for (let i = 0; i < priority.length; i += 1) {
+      if (prioritySorted[i] !== keysSorted[i]) {
+        throw new Error(`The priority array's values didn't correspond to the values of the breakpoint map.`);
+      }
+    }
+  }
+}
+
+
 /**
  * Takes in an instance object that was created inside of respondable.
  * @param {Object} instance
@@ -66,41 +102,33 @@ export function destroy(instance) {
       mq.removeListener(instance.listenerCb);
     }
 
-    for(const key of Object.keys(instance)) {
+    for (const key of Object.keys(instance)) {
       delete instance[key];
     }
     return true;
-  } else {
-    console.warn(`This instance has already been destroyed.`);
-    return false;
   }
+
+  // eslint-disable-next-line no-console
+  console.warn(`This instance has already been destroyed.`);
+  return false;
 }
 
 /**
- * Main entry point for respondable. Takes the map of queries/values
+ * Entry point for respondable. Takes the map of queries/values
  * and the callback function and registers them via MapValuesToState.
  * @param {Object} queries and values
  * @param {Function} callback
  * @return {String} instanceID
  */
-export function respondable(values, onChangeCb) {
-  if (!values || typeof values !== 'object') {
-    throw new Error(`Respondable requires an object as its first argument.`);
-  }
-
-  if (!onChangeCb || typeof onChangeCb !== 'function') {
-    throw new Error(`Respondable requires a callback function as its second argument`);
-  }
-
-  if(typeof window !== 'object' || !window.matchMedia) {
-    throw new Error(`Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not supported in this browser.`);
-  }
+export function respondable(values, onChangeCb, priority = []) {
+  // Make sure the input is valid. Throw errors if not.
+  validateInput(values, onChangeCb, priority);
 
   // Create instance
   const instance = {};
 
   // Create a handler for matchMedia when a query's 'active' state changes
-  instance.listenerCb = createQueryChangeHandler(findMatches, instance);
+  instance.listenerCb = createQueryChangeHandler(findMatches, instance, priority);
 
   // Callback passed in by user. Made a property for convenience
   instance.onChangeCb = onChangeCb;
@@ -111,7 +139,7 @@ export function respondable(values, onChangeCb) {
 
   // This method will find all active queries.
   // It is more expensive than the method used in 'createQueryChangeHandler'
-  findMatches(instance);
+  findMatches(instance, priority);
 
   return () => destroy(instance);
 }
