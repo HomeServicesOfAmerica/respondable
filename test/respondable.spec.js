@@ -1,4 +1,5 @@
 import test from 'ava';
+import { spy } from 'sinon';
 import matchMedia, { updateSize } from './matchmedia-mock';
 import {
   destroy,
@@ -8,10 +9,7 @@ import {
   mapMediaQueryLists,
   validateInput,
 } from '../src/respondable.js';
-
 import respondableExport from '../src/index';
-
-// TODO Could test overlappingBreakpoints in all test suites
 
 const breakpoints = {
   'screen and (max-width: 413px)': 'smallest',
@@ -33,7 +31,7 @@ test('index.js', (t) => {
 });
 
 test.serial('validateInput', (t) => {
-  t.plan(13);
+  t.plan(15);
 
   global.window = undefined;
   // validateInput should be a function.
@@ -41,6 +39,8 @@ test.serial('validateInput', (t) => {
 
   // Checking argument validation
   t.throws(() => validateInput(undefined, () => {}), 'Respondable requires an object as its first argument.');
+  t.throws(() => validateInput(true, () => {}), 'Respondable requires an object as its first argument.');
+  t.throws(() => validateInput(3, () => {}), 'Respondable requires an object as its first argument.');
   t.throws(() => validateInput({}, undefined), 'Respondable requires a callback function as its second argument');
 
   // If window is undefined throw error.
@@ -88,22 +88,13 @@ test('respondable', (t) => {
   // Respondable should be a function.
   t.true(typeof respondable === 'function');
 
-  /* eslint-disable no-unused-vars */
-  let calledCount = 0;
-  let calledWith = null;
-  /* eslint-enable no-unused-vars */
-
-  const respondableCallback = (active, largest) => {
-    calledCount += 1;
-    calledWith = [active, largest];
-  };
+  const respondableCallback = spy();
 
   // Set initial size.
   updateSize('screen and (max-width: 413px)');
 
   // updateSize shouldn't call callback.
-  t.is(calledCount, 0);
-  t.is(calledWith, null);
+  t.is(respondableCallback.callCount, 0);
 
   // Respondable should return a destroy function.
   const destroyIt = respondable(breakpoints, respondableCallback);
@@ -111,19 +102,19 @@ test('respondable', (t) => {
   t.true(String(destroyIt).includes('destroy('));
 
   // Initial active values should be passed into callback.
-  t.is(calledCount, 1);
-  t.deepEqual(calledWith, [['smallest'], undefined]);
+  t.is(respondableCallback.callCount, 1);
+  t.true(respondableCallback.calledWith(['smallest'], undefined));
 
   // Changing size should retrigger callback and pass in accurate data.
   updateSize('screen and (min-width: 1080px) and (max-width: 1399px)');
-  t.is(calledCount, 2);
-  t.deepEqual(calledWith, [['large'], undefined]);
+  t.is(respondableCallback.callCount, 2);
+  t.true(respondableCallback.calledWith(['large'], undefined));
 
   // Destroying the instance should not throw an error and should prevent future updates
   t.notThrows(destroyIt);
   updateSize('doesn\'t matter');
-  t.is(calledCount, 2);
-  t.deepEqual(calledWith, [['large'], undefined]);
+  t.is(respondableCallback.callCount, 2);
+  t.true(respondableCallback.calledWith(['large'], undefined));
 
   // This is obviously not a correct breakpoint config, but this was a quick way to test
   // multiple matching queryies
@@ -138,35 +129,29 @@ test('respondable', (t) => {
   // Should only match small
   updateSize('screen and (max-width: 413px)');
 
-  calledCount = 0;
-  calledWith = null;
+  const respondablePriorityCallback = spy();
 
-  const destroyItPriority = respondable(overlappingBreakpoints, respondableCallback, ['largest', 'large', 'medium', 'small', 'smallest']);
+  const destroyItPriority = respondable(overlappingBreakpoints, respondablePriorityCallback, ['largest', 'large', 'medium', 'small', 'smallest']);
 
   // Initial active values should be passed into callback.
-  t.is(calledCount, 1);
-  t.deepEqual(calledWith, [['small'], 'small']);
+  t.is(respondablePriorityCallback.callCount, 1);
+  t.true(respondablePriorityCallback.calledWith(['small'], 'small'));
 
   // Should match smallest, small, and medium
   updateSize('(max-width: 413px)');
   // 4 because it triggered 3 listeners (3 matches)
-  t.is(calledCount, 4);
-  t.deepEqual(calledWith, [['smallest', 'small', 'medium'], 'medium']);
+  t.is(respondablePriorityCallback.callCount, 4);
+  t.true(respondablePriorityCallback.calledWith(['smallest', 'small', 'medium'], 'medium'));
 
   // Destroying the instance should not throw an error and should prevent future updates
   t.notThrows(destroyItPriority);
   updateSize('doesn\'t matter');
-  t.is(calledCount, 4);
-  t.deepEqual(calledWith, [['smallest', 'small', 'medium'], 'medium']);
+  t.is(respondablePriorityCallback.callCount, 4);
+  t.true(respondablePriorityCallback.calledWith(['smallest', 'small', 'medium'], 'medium'));
 });
 
 test('destroy', (t) => {
   t.plan(3 + (Object.keys(breakpoints).length * 2));
-
-  /* eslint-disable no-unused-vars */
-  let calledCount;
-  let calledWith;
-  /* eslint-enable no-unused-vars */
 
   // Mock the query change handler
   const queryChangeHandler = () => {};
@@ -177,10 +162,7 @@ test('destroy', (t) => {
   // Mock an instance in state
   const instance = {
     queries: mockMQL,
-    onChangeCb: (...args) => {
-      calledCount += 1;
-      calledWith = args;
-    },
+    onChangeCb: () => {},
     listenerCb: queryChangeHandler,
   };
 
@@ -226,52 +208,45 @@ test('mapMediaQueryLists', (t) => {
 });
 
 test('findMatches', (t) => {
-  t.plan(14);
+  t.plan(12);
 
   // findMatches should be a function
   t.true(typeof findMatches === 'function');
 
   // initialize instance and onChangeCb spies
-  let calledCount = 0;
-  let calledWith = null;
   const instance = {
     queries: [
       { matches: true, value: 'bob' },
       { matches: true, value: 'alice' },
       { matches: false, value: 'frank' },
     ],
-    onChangeCb: (...args) => {
-      calledCount += 1;
-      calledWith = args;
-    },
+    onChangeCb: spy(),
   };
 
   // Given the correct parameters, findMatches should return an array.
-  t.is(calledCount, 0);
-  const matchingValues = findMatches(instance, []);
-  t.is(calledCount, 1);
-  t.true(Array.isArray(matchingValues.matches));
-  t.true(typeof matchingValues.priority === 'undefined');
+  t.is(instance.onChangeCb.callCount, 0);
+  const matches = findMatches(instance, []);
+  t.is(instance.onChangeCb.callCount, 1);
+  t.true(Array.isArray(matches.matches));
+  t.true(typeof matches.priority === 'undefined');
 
   // The array should contain the values of query items that have matches set to true.
-  t.deepEqual(['bob', 'alice'], matchingValues.matches);
+  t.deepEqual(['bob', 'alice'], matches.matches);
 
-  // onChangeCb should be passed the same object that was returned.
-  t.is(calledWith[0], matchingValues.matches);
-  t.is(calledWith[1], matchingValues.priority);
+  // onChangeCb should be passed the same values that were returned.
+  t.true(instance.onChangeCb.calledWith(matches.matches, matches.priority));
 
 
-  const matchingValuesPriority = findMatches(instance, ['alice', 'bob']);
-  t.is(calledCount, 2);
-  t.true(Array.isArray(matchingValuesPriority.matches));
-  t.true(typeof matchingValuesPriority.priority === 'string');
+  const matchesPriority = findMatches(instance, ['alice', 'bob']);
+  t.is(instance.onChangeCb.callCount, 2);
+  t.true(Array.isArray(matchesPriority.matches));
+  t.true(typeof matchesPriority.priority === 'string');
 
   // The array should contain the values of query items that have matches set to true.
-  t.is('alice', matchingValuesPriority.priority);
+  t.is('alice', matchesPriority.priority);
 
-  // onChangeCb should be passed the same object that was returned.
-  t.is(calledWith[0], matchingValuesPriority.matches);
-  t.is(calledWith[1], matchingValuesPriority.priority);
+  // onChangeCb should be passed the same values that were returned.
+  t.true(instance.onChangeCb.calledWith(matchesPriority.matches, matchesPriority.priority));
 });
 
 test('createQueryChangeHandler', (t) => {
@@ -280,29 +255,25 @@ test('createQueryChangeHandler', (t) => {
   // createQueryChangeHandler should be a function
   t.true(typeof createQueryChangeHandler === 'function');
 
-  // Setup
-  let calledCount = 0;
-  const mockFindMatches = () => {
-    calledCount += 1;
-    return true;
-  };
+  // Setup mocks. findMatches is going to be returning true as a match for testing purposes.
+  const mockFindMatches = spy(() => true);
   const mockInstance = { needsAKey: true };
 
   // createQueryChangeHandler should return a function and not call findMatches
   const handlerWrong = createQueryChangeHandler(mockFindMatches);
   t.true(typeof handlerWrong === 'function');
-  t.is(calledCount, 0);
+  t.is(mockFindMatches.callCount, 0);
 
   // If createQueryChangeHandler is not passed an instance,
   // findMatches should not be invoked
   t.is(handlerWrong(), undefined);
-  t.is(calledCount, 0);
+  t.is(mockFindMatches.callCount, 0);
 
   // If given the correct parameters, createQueryChangeHandler should invoke
   // findMatches and return the result.
   const handlerCorrect = createQueryChangeHandler(mockFindMatches, mockInstance, []);
   t.true(typeof handlerCorrect === 'function');
-  t.is(calledCount, 0);
+  t.is(mockFindMatches.callCount, 0);
   t.true(handlerCorrect());
-  t.is(calledCount, 1);
+  t.is(mockFindMatches.callCount, 1);
 });

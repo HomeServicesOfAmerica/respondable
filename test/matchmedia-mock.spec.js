@@ -1,29 +1,10 @@
 import test from 'ava';
+import { spy } from 'sinon';
 import matchMedia, { matchMediaState, updateSize, checkIfMatches } from './matchmedia-mock';
-
-const makeCallCounter = () => {
-  const callCounter = () => {
-    callCounter.count += 1;
-    return callCounter.count;
-  };
-  callCounter.count = 0;
-  return callCounter;
-};
 
 test.beforeEach(() => {
   matchMediaState.size = '';
   matchMediaState.callbacks = [];
-});
-
-test('makeCallCounter', (t) => {
-  t.plan(6);
-  const callCounter = makeCallCounter();
-  t.true(typeof makeCallCounter === 'function');
-  t.true(typeof callCounter === 'function');
-  t.true(typeof callCounter.count === 'number');
-  t.is(callCounter.count, 0);
-  t.is(callCounter(), 1);
-  t.is(callCounter.count, 1);
 });
 
 test('checkIfMatches', (t) => {
@@ -43,18 +24,18 @@ test('updateSize', (t) => {
   t.plan(5);
   t.true(typeof updateSize === 'function');
 
-  const cb1 = makeCallCounter();
-  const cb2 = makeCallCounter();
-  const cb3 = makeCallCounter();
+  const cb1 = spy();
+  const cb2 = spy();
+  const cb3 = spy();
   const newSize = 'newSize';
   matchMediaState.callbacks.push(cb1, cb2, cb3);
 
-  t.true([cb1, cb2, cb3].every(cb => cb.count === 0));
+  t.true([cb1, cb2, cb3].every(cb => cb.callCount === 0));
   t.is(matchMediaState.size, '');
   // Verify that callbacks are all being invoked when size changes.
   updateSize(newSize);
   t.is(matchMediaState.size, newSize);
-  t.true([cb1, cb2, cb3].every(cb => cb.count === 1));
+  t.true([cb1, cb2, cb3].every(cb => cb.callCount === 1));
 });
 
 test('matchMediaState', (t) => {

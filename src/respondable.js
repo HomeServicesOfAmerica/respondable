@@ -1,8 +1,9 @@
 /**
-* Recieves an instance as its only parameter.
-* Returns a list of the values associated with the instance's matching queries.
+* Returns an object a list of all values associated with the instance's matching queries as well
+  as the highest priority value
 * @param {Object} instance
-* @return {Array} matches
+* @param {Object[]} priority
+* @return {Object} matches
 */
 export function findMatches(instance, priority) {
   const matches = [];
@@ -20,11 +21,14 @@ export function findMatches(instance, priority) {
 }
 
 /**
- * Creates a onChange handler for resizes that change the activate / deactivate a media query.
+ * Creates an onChange handler for resizes that change the active state of a media query.
  * Returns a function that is bound to the instance
+ * @param {Function} findMatches - Same as findMatches in upper scope. Passed in for testing ease.
  * @param {Object} instance
+ * @param {Object[]} priority
  * @return {Function} handler
  */
+// eslint-disable-next-line no-shadow
 export function createQueryChangeHandler(findMatches, instance, priority) {
   return function handler() {
     if (instance && Object.keys(instance).length) {
@@ -39,7 +43,7 @@ export function createQueryChangeHandler(findMatches, instance, priority) {
  * returns an array of MediaQueryLists.
  * @param {Object} values
  * @param {Function} listenerCallback - result of createQueryChangeHandler
- * @param {Object} matchMedia - Optional polyfill for matchMedia
+ * @param {Object} matchMedia - Optional, easy way to mock matchMedia for testing
  * @return {Array} queries
  */
 export function mapMediaQueryLists(values, queryChangeHandler, matchMedia) {
@@ -57,6 +61,12 @@ export function mapMediaQueryLists(values, queryChangeHandler, matchMedia) {
   });
 }
 
+/**
+ * Checks arguments for invalid input. Throw errors if needed.
+ * @param {Object} queries and values
+ * @param {Function} callback
+ * @param {Object[]} priority - Values from first parameter in order of descending precedance
+ */
 export function validateInput(values, onChangeCb, priority) {
   if (!values || typeof values !== 'object') {
     throw new Error(`Respondable requires an object as its first argument.`);
@@ -118,6 +128,7 @@ export function destroy(instance) {
  * and the callback function and registers them via MapValuesToState.
  * @param {Object} queries and values
  * @param {Function} callback
+ * @param {Object[]} priority - Values from first parameter in order of descending precedance
  * @return {String} instanceID
  */
 export function respondable(values, onChangeCb, priority = []) {

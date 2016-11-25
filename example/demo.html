@@ -29,64 +29,85 @@
     <button id='destroy1'>Destroy</button><h1> One: </h1><br><h2 id='output1'></h2><br><br>
     <button id='destroy2'>Destroy</button><h1> Two: </h1><br><h2 id='output2'></h2><br><br>
     <br>
-    <center> The code below is editable! :)</center>
+    <center id='error' style='color: red; font-size: 22px; line-height: 26px; display: none'>
+      There was an error with that edit. Please check out the console / docs!
+    </center>
+    <div style='text-align: center'>
+      The code below is editable! :)
+      <button onClick='resetAll()'> Reset All! </button>
+    </div>
     <pre>
       <code>
         <div contenteditable id=instance1>
-  // Supports a set of breakpoints
-  var one = {
+  // Non-overlapping breakpoint example
+  var oneMap = {
     'screen and (max-width: 413px)': 'smallest',
     'screen and (min-width: 414px) and (max-width: 767px)': 'small',
     'screen and (min-width: 768px) and (max-width: 1079px)': 'medium',
     'screen and (min-width: 1080px) and (max-width: 1399px)': 'large',
     'screen and (min-width: 1400px)': 'largest',
   };
+
+  var oneCallback = function(active) {
+    document.getElementById('output1').innerHTML = 'Active: ' + JSON.stringify(data);
+  };
+
+  // Make matching queries show up in document
+  var destroyOne = respondable(oneMap, oneCallback);
         </div>
         <div contenteditable id=instance2>
-  // Correctly handles competing breakpoints
-  // NOTE: This would select only the largest query in a previous version.
-  var two = {
+  // overlapping breakpoint example
+  var twoMap = {
     'screen and (max-width: 413px)': 'smallest',
     'screen and (min-width: 414px)': 'small',
     'screen and (min-width: 768px)': 'medium',
     'screen and (min-width: 1080px)': 'large',
     'screen and (min-width: 1400px)': 'largest',
   };
+
+  var twoCallback = function(active, largest) {
+    document.getElementById('output2').innerHTML = 'Active: ' + JSON.stringify(data) + ' and Priority: "' + largest + '"';
+  };
+
+  // The order is from high priority to low priority
+  var twoPriority = ['largest', 'large', 'medium', 'small', 'smallest'];
+
+  var destroyTwo = respondable(twoMap, twoCallback, twoPriority);
         </div>
         <script>
 
-        var destroy1 = null;
-        var destroy2 = null;
-
-        function resetAll(){
-          destroy1();
-          destroy2();
-          setupAll();
-        }
+        var resetAll = null;
 
         function setupAll() {
+          if (resetAll !== null) {
+            document.getElementById('instance1').removeEventListener('blur', resetAll);
+            document.getElementById('instance2').removeEventListener('blur', resetAll);
+          }
+
           eval(document.getElementById('instance1').innerHTML);
           eval(document.getElementById('instance2').innerHTML);
 
-          // Make matching queries show up in document
-          var destroy1 = respondable(one, function(data) {
-            document.getElementById('output1').innerHTML = JSON.stringify(data);
-          });
-
-          var destroy2 = respondable(two, function(data) {
-            document.getElementById('output2').innerHTML = JSON.stringify(data);
-          });
-
           // Set up destroy buttons.
-          document.getElementById('destroy1').onclick = destroy1;
-          document.getElementById('destroy2').onclick = destroy2;
+          document.getElementById('destroy1').onclick = destroyOne;
+          document.getElementById('destroy2').onclick = destroyTwo;
+
+          resetAll = function() {
+            destroyOne();
+            destroyTwo();
+            setupAll();
+          }
+          document.getElementById('instance1').addEventListener('blur', resetAll);
+          document.getElementById('instance2').addEventListener('blur', resetAll);
         }
 
-        // Make editable code do something
-        document.getElementById('instance1').addEventListener('blur', resetAll);
-        document.getElementById('instance2').addEventListener('blur', resetAll);
-
         setupAll();
+
+        window.addEventListener('error', function(){
+          document.getElementById('error').style.display = 'block';
+          setTimeout(function(){
+            document.getElementById('error').style.display = 'none'
+          }, 3000);
+        });
 
         </script>
       </pre>
