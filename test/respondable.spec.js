@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import test from 'ava';
 import { spy } from 'sinon';
 import matchMedia, { updateSize } from './matchmedia-mock';
@@ -8,6 +9,13 @@ import {
   createQueryChangeHandler,
   mapMediaQueryLists,
   validateInput,
+  WARN_INSTANCE_ALREADY_DESTROYED,
+  WARN_EARLY_FIND_MATCHES_INVOKE,
+  ERROR_INVALID_BREAKPOINT_CONFIG_TYPE,
+  ERROR_INVALID_CALLBACK_TYPE,
+  ERROR_INVALID_PRIORITY_TYPE,
+  ERROR_MATCH_MEDIA_TYPE,
+  ERROR_INVALID_PRIORITY_ARRAY_COMPOSITION,
 } from '../src/respondable.js';
 import respondableExport from '../src/index';
 
@@ -19,8 +27,11 @@ const breakpoints = {
   'screen and (min-width: 1400px)': 'largest',
 };
 
+const realWarn = console.warn;
+
 test.beforeEach(() => {
   global.window = { matchMedia };
+  console.warn = realWarn;
 });
 
 test('index.js', (t) => {
@@ -40,42 +51,39 @@ test.serial('validateInput', (t) => {
   // Checking argument validation
   t.throws(
     () => validateInput(undefined, () => {}),
-    `Respondable requires an object as its first argument.`
+    ERROR_INVALID_BREAKPOINT_CONFIG_TYPE
   );
   t.throws(
     () => validateInput(true, () => {}),
-    `Respondable requires an object as its first argument.`
+    ERROR_INVALID_BREAKPOINT_CONFIG_TYPE
   );
   t.throws(
     () => validateInput(3, () => {}),
-    `Respondable requires an object as its first argument.`
+    ERROR_INVALID_BREAKPOINT_CONFIG_TYPE
   );
   t.throws(
     () => validateInput({}, undefined),
-    `Respondable requires a callback function as its second argument`
+    ERROR_INVALID_CALLBACK_TYPE
   );
 
   // If window is undefined throw error.
   t.throws(
     () => validateInput({}, () => {}),
-    `Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not ` +
-    `supported in this browser.`
+    ERROR_MATCH_MEDIA_TYPE
   );
 
   // If window.matchMedia is undefined throw error.
   global.window = {};
   t.throws(
     () => validateInput({}, () => {}),
-    `Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not ` +
-    `supported in this browser.`
+    ERROR_MATCH_MEDIA_TYPE
   );
 
   // If all arguments are correct and window.matchMedia is defined, don't throw error.
   global.window = { matchMedia };
   // TODO: Figure out why this doesn't work with validateInput
   t.notThrows(() => respondable({}, () => {}),
-    `Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not ` +
-    `supported in this browser.`
+    ERROR_MATCH_MEDIA_TYPE
   );
 
   // If priority array doesn't consist of all breakpoint values without duplicates, throw error.
@@ -98,19 +106,19 @@ test.serial('validateInput', (t) => {
   ];
   t.throws(
     () => validateInput(map, () => {}, true),
-    `Respondable's third argument must be an array, if used.`
+    ERROR_INVALID_PRIORITY_TYPE
   );
 
   // The following assertion doesn't throw `Respondable's third argument must be an array, if used.`
   t.notThrows(
     () => validateInput(map, () => {}, []),
-    `Respondable's third argument must be an array, if used.`
+    ERROR_INVALID_PRIORITY_TYPE
   );
 
   for (const wrongPriority of wrongPriorities) {
     t.throws(
       () => validateInput(map, () => {}, wrongPriority),
-      `The priority array's values didn't correspond to the values of the breakpoint map.`
+      ERROR_INVALID_PRIORITY_ARRAY_COMPOSITION
     );
   }
 
@@ -189,7 +197,7 @@ test('respondable', (t) => {
 });
 
 test('destroy', (t) => {
-  t.plan(3 + (Object.keys(breakpoints).length * 2));
+  t.plan(6 + (Object.keys(breakpoints).length * 2));
 
   // Mock the query change handler
   const queryChangeHandler = () => {};
@@ -209,11 +217,16 @@ test('destroy', (t) => {
     t.is(mockMQ.listeners.length, 1);
   }
 
+  console.warn = spy();
+
   const successWrong = destroy();
   t.false(successWrong);
+  t.true(console.warn.calledWith(WARN_INSTANCE_ALREADY_DESTROYED));
+  t.is(console.warn.callCount, 1);
 
   const successCorrect = destroy(instance);
   t.true(successCorrect);
+  t.is(console.warn.callCount, 1);
 
   // All MQ objects should have no listeners
   for (const mockMQ of mockMQL) {
@@ -246,7 +259,7 @@ test('mapMediaQueryLists', (t) => {
 });
 
 test('findMatches', (t) => {
-  t.plan(12);
+  t.plan(18);
 
   // findMatches should be a function
   t.true(typeof findMatches === 'function');
@@ -260,6 +273,14 @@ test('findMatches', (t) => {
     ],
     onChangeCb: spy(),
   };
+
+  console.warn = spy();
+  t.is(findMatches({}, []), undefined);
+  t.true(console.warn.calledWith(WARN_EARLY_FIND_MATCHES_INVOKE));
+  t.is(console.warn.callCount, 1);
+  t.is(findMatches({ queries: true }, []), undefined);
+  t.true(console.warn.calledWith(WARN_EARLY_FIND_MATCHES_INVOKE));
+  t.is(console.warn.callCount, 2);
 
   // Given the correct parameters, findMatches should return an array.
   t.is(instance.onChangeCb.callCount, 0);
@@ -288,7 +309,7 @@ test('findMatches', (t) => {
 });
 
 test('createQueryChangeHandler', (t) => {
-  t.plan(9);
+  t.plan(13);
 
   // createQueryChangeHandler should be a function
   t.true(typeof createQueryChangeHandler === 'function');
@@ -297,21 +318,28 @@ test('createQueryChangeHandler', (t) => {
   const mockFindMatches = spy(() => true);
   const mockInstance = { needsAKey: true };
 
-  // createQueryChangeHandler should return a function and not call findMatches
-  const handlerWrong = createQueryChangeHandler(mockFindMatches);
-  t.true(typeof handlerWrong === 'function');
-  t.is(mockFindMatches.callCount, 0);
-
-  // If createQueryChangeHandler is not passed an instance,
-  // findMatches should not be invoked
-  t.is(handlerWrong(), undefined);
-  t.is(mockFindMatches.callCount, 0);
-
-  // If given the correct parameters, createQueryChangeHandler should invoke
-  // findMatches and return the result.
+  // createQueryChangeHandler should return a function and not invoke findMatches
+  const handlerNoInstance = createQueryChangeHandler(mockFindMatches);
+  const handlerWrongType = createQueryChangeHandler(mockFindMatches, true);
+  const handlerEmptyInstance = createQueryChangeHandler(mockFindMatches, {});
   const handlerCorrect = createQueryChangeHandler(mockFindMatches, mockInstance, []);
+
+  t.true(typeof handlerNoInstance === 'function');
+  t.true(typeof handlerWrongType === 'function');
+  t.true(typeof handlerEmptyInstance === 'function');
   t.true(typeof handlerCorrect === 'function');
+
+  // the queryChangeHandler should not call findMatches if there is no instance
+  t.true(handlerNoInstance() === undefined);
   t.is(mockFindMatches.callCount, 0);
+
+  t.true(handlerWrongType() === undefined);
+  t.is(mockFindMatches.callCount, 0);
+
+  t.true(handlerEmptyInstance() === undefined);
+  t.is(mockFindMatches.callCount, 0);
+
+  // If given the correct parameters, createQueryChangeHandler should return findMatch's result
   t.true(handlerCorrect());
   t.is(mockFindMatches.callCount, 1);
 });
