@@ -14,10 +14,10 @@ export function findMatches(instance, priority) {
   }
 
   // If there are no matches, return -1, otherwise the smallest index.
-  const winnerIndex = matches.length ? Math.min(...matches.map(m => priority.indexOf(m))) : -1;
+  const priorityIndex = matches.length ? Math.min(...matches.map(m => priority.indexOf(m))) : -1;
 
-  instance.onChangeCb(matches, priority[winnerIndex]);
-  return { matches, priority: priority[winnerIndex] };
+  instance.onChangeCb(matches, priority[priorityIndex]);
+  return { matches, priority: priority[priorityIndex] };
 }
 
 /**

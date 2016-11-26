@@ -6,6 +6,7 @@
   "scripts": {
     "clean": "rimraf ./dist ./coverage ./.nyc_output",
     "coverage-report": "nyc report --reporter=html",
+    "coveralls": "nyc report --reporter=lcov && cat ./coverage/lcov.info | coveralls",
     "compile": "mkdir dist && browserify ./src/index.js -s respondable -o dist/index.min.js -t [ babelify --presets [ es2015 stage-0 stage-1 babili ] ]",
     "lint": "eslint src test",
     "build": "npm run clean && npm run compile && npm run lint && npm test",
@@ -50,6 +51,7 @@
     "babelify": "^7.3.0",
     "babili": "0.0.9",
     "browserify": "^13.1.0",
+    "coveralls": "^2.11.15",
     "eslint": "^3.7.1",
     "eslint-config-airbnb": "^12.0.0",
     "eslint-plugin-import": "^2.0.0",
