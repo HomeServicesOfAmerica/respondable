@@ -1,6 +1,6 @@
 {
   "name": "respondable",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Utilizes matchMedia to performantly return conditional values based on media queries.",
   "main": "dist/index.min.js",
   "scripts": {
@@ -34,7 +34,10 @@
   "keywords": [
     "responsive",
     "matchMedia",
-    "breakpoint"
+    "breakpoint",
+    "query",
+    "media",
+    "viewport"
   ],
   "contributors": [
     "Brandon Dail <cottoncrypt@gmail.com>",
