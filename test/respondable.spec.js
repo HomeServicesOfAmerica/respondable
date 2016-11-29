@@ -38,22 +38,45 @@ test.serial('validateInput', (t) => {
   t.true(typeof validateInput === 'function');
 
   // Checking argument validation
-  t.throws(() => validateInput(undefined, () => {}), 'Respondable requires an object as its first argument.');
-  t.throws(() => validateInput(true, () => {}), 'Respondable requires an object as its first argument.');
-  t.throws(() => validateInput(3, () => {}), 'Respondable requires an object as its first argument.');
-  t.throws(() => validateInput({}, undefined), 'Respondable requires a callback function as its second argument');
+  t.throws(
+    () => validateInput(undefined, () => {}),
+    `Respondable requires an object as its first argument.`
+  );
+  t.throws(
+    () => validateInput(true, () => {}),
+    `Respondable requires an object as its first argument.`
+  );
+  t.throws(
+    () => validateInput(3, () => {}),
+    `Respondable requires an object as its first argument.`
+  );
+  t.throws(
+    () => validateInput({}, undefined),
+    `Respondable requires a callback function as its second argument`
+  );
 
   // If window is undefined throw error.
-  t.throws(() => validateInput({}, () => {}), 'Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not supported in this browser.');
+  t.throws(
+    () => validateInput({}, () => {}),
+    `Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not ` +
+    `supported in this browser.`
+  );
 
   // If window.matchMedia is undefined throw error.
   global.window = {};
-  t.throws(() => validateInput({}, () => {}), 'Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not supported in this browser.');
+  t.throws(
+    () => validateInput({}, () => {}),
+    `Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not ` +
+    `supported in this browser.`
+  );
 
   // If all arguments are correct and window.matchMedia is defined, don't throw error.
   global.window = { matchMedia };
   // TODO: Figure out why this doesn't work with validateInput
-  t.notThrows(() => respondable({}, () => {}), 'Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not supported in this browser.');
+  t.notThrows(() => respondable({}, () => {}),
+    `Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not ` +
+    `supported in this browser.`
+  );
 
   // If priority array doesn't consist of all breakpoint values without duplicates, throw error.
   const map = {
@@ -70,13 +93,22 @@ test.serial('validateInput', (t) => {
     ['a', 'a', 'a'],
     ['a', 'b', 'c', 'd'],
   ];
-  t.throws(() => validateInput(map, () => {}, true), `Respondable's third argument must be an array, if used.`);
+  t.throws(
+    () => validateInput(map, () => {}, true),
+    `Respondable's third argument must be an array, if used.`
+  );
 
   // The following assertion doesn't throw `Respondable's third argument must be an array, if used.`
-  t.notThrows(() => validateInput(map, () => {}, []), `Respondable's third argument must be an array, if used.`);
+  t.notThrows(
+    () => validateInput(map, () => {}, []),
+    `Respondable's third argument must be an array, if used.`
+  );
 
   for (const wrongPriority of wrongPriorities) {
-    t.throws(() => validateInput(map, () => {}, wrongPriority), `The priority array's values didn't correspond to the values of the breakpoint map.`);
+    t.throws(
+      () => validateInput(map, () => {}, wrongPriority),
+      `The priority array's values didn't correspond to the values of the breakpoint map.`
+    );
   }
 
   for (const correctPriority of correctPriorities) {
@@ -131,7 +163,10 @@ test('respondable', (t) => {
 
   const respondablePriorityCallback = spy();
 
-  const destroyItPriority = respondable(overlappingBreakpoints, respondablePriorityCallback, ['largest', 'large', 'medium', 'small', 'smallest']);
+  const destroyItPriority = respondable(
+    overlappingBreakpoints, respondablePriorityCallback,
+    ['largest', 'large', 'medium', 'small', 'smallest']
+  );
 
   // Initial active values should be passed into callback.
   t.is(respondablePriorityCallback.callCount, 1);

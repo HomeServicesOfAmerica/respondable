@@ -75,9 +75,12 @@ export function validateInput(values, onChangeCb, priority) {
   if (typeof onChangeCb !== 'function') {
     throw new Error(`Respondable requires a callback function as its second argument`);
   }
-  // console.log('window', global.window);
+
   if (typeof window !== 'object' || typeof window.matchMedia !== 'function') {
-    throw new Error(`Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not supported in this browser.`);
+    throw new Error(
+      `Respondable is dependent on window.matchMedia. Please use a polyfill if matchMedia is not ` +
+      `supported in this browser.`
+    );
   }
 
   if (!Array.isArray(priority)) {
@@ -89,12 +92,16 @@ export function validateInput(values, onChangeCb, priority) {
     const keysSorted = Object.keys(values).map(k => values[k]).sort();
 
     if (prioritySorted.length !== keysSorted.length) {
-      throw new Error(`The priority array's values didn't correspond to the values of the breakpoint map.`);
+      throw new Error(
+        `The priority array's values didn't correspond to the values of the breakpoint map.`
+      );
     }
 
     for (let i = 0; i < priority.length; i += 1) {
       if (prioritySorted[i] !== keysSorted[i]) {
-        throw new Error(`The priority array's values didn't correspond to the values of the breakpoint map.`);
+        throw new Error(
+          `The priority array's values didn't correspond to the values of the breakpoint map.`
+        );
       }
     }
   }

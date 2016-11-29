@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/respondable.svg)](https://badge.fury.io/js/respondable) [![Build Status](https://travis-ci.org/ConciergeAuctions/respondable.svg?branch=master)](https://travis-ci.org/ConciergeAuctions/respondable) [![Coverage Status](https://coveralls.io/repos/github/ConciergeAuctions/respondable/badge.svg?branch=master)](https://coveralls.io/github/ConciergeAuctions/respondable?branch=master) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/5e57f35560ff437ba63f0b40bea027f4)](https://www.codacy.com/app/Concierge-Auctions/respondable_2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ConciergeAuctions/respondable&amp;utm_campaign=Badge_Grade) [![Dependencies](https://img.shields.io/david/ConciergeAuctions/respondable.svg)](https://david-dm.org/ConciergeAuctions/respondable#info=dependencies)
+
 # respondable
 
 A small utility that makes dealing with media queries programmatically a breeze. `respondable` accepts an object with media query configuration(s) and a callback. The callback will trigger whenever a media query becomes inactive or active, and will have all active media queries passed in.
