@@ -21,6 +21,8 @@ respondable doesn't use any `resize` event handlers. Instead it relies on the `a
 `$ npm install --save respondable`
 
 ## Changelog
+> Respondable now has a 3rd parameter. It is optional and used to specify the priority of each breakpoint. This is only useful for breakpoint configurations with competing queries.
+
 > Instead of returning an ID that needs to be passed into `respondable.destroy`, `respondable` will return a `destroy` function that is already bound to your respondable instance. See the example [below](#example).
 
 > Support for default value as a property of the `breakpoints` object has been deprecated. (See Best Practices for more details.)
@@ -30,23 +32,27 @@ respondable doesn't use any `resize` event handlers. Instead it relies on the `a
 ## Documentation
 
 ### respondable
-- Parameters: `breakpoints` and  `callback`
+- Parameters: `breakpoints`,  `callback`, and `priority`
 - Returns: `destroy`, a function that will remove registered listeners when invoked.
 
-Creates a MediaQueryObjectList for each media query in `breakpoints`. A query becoming active or inactive will invoke `callback`. The callback will also be invoked upon initialization. Callback will recieve all of the values associated with the active media queries.
+Creates a MediaQueryObjectList for each media query in `breakpoints`. A query becoming active or inactive will invoke `callback`. The callback will also be invoked upon initialization. Callback will receive all of the values associated with the active media queries.
 
 #### breakpoints <object>
 
 - Keys: Must be media queries excluding the leading characters `@media` as per [matchMedia](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia) specs.
-- Values: Consumers discretion.
+- Values: Consumers discretion. Strings are recommended.
 
 #### callback <function>
 
-- Parameter: `values`
+- Parameter: `active`
 
-Invoked when a query becomes active or inactive and also when the instance is first initialized. `values` is of type Array and populated with each value (from `breakpoints`) corresponding to a matching query (from `breakpoints`).
+Invoked when a query becomes active or inactive and also when the instance is first initialized. `active` is of type Array and populated with each value (from `breakpoints`) corresponding to a matching query (from `breakpoints`).
 
-###### Example:
+### priority <array> - OPTIONAL
+
+- Each item in this array must correspond to a value in the breakpoints object. There may be no duplicates and each value in the breakpoints object must be accounted for. The precedence of each item is dependent on the array's order. The lower the array index of an item is, the higher the priority.
+
+###### Example for non-competing breakpoints:
 ```js
 const breakpointObject = {
   'screen and (max-width: 413px)': 'smallest',
@@ -56,8 +62,28 @@ const breakpointObject = {
   'screen and (min-width: 1400px)': 'largest',
 };
 
-const destroy = respondable(map, function(values) {
+const destroy = respondable(map, function(active) {
   // use value here
+});
+
+// remove registered listeners
+destroy();
+```
+
+###### Example for competing breakpoints:
+```js
+const breakpointObject = {
+  'screen and (max-width: 413px)': 'smallest',
+  'screen and (min-width: 414px)': 'small',
+  'screen and (min-width: 768px)': 'medium',
+  'screen and (min-width: 1080px)': 'large',
+  'screen and (min-width: 1400px)': 'largest',
+};
+
+const priority = ['largest', 'large', 'medium', 'small', 'smallest'];
+
+const destroy = respondable(map, function(active, largest) {
+  // The second parameter will now always be the largest active query.
 });
 
 // remove registered listeners

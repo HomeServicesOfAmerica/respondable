@@ -1,0 +1,16 @@
+language: node_js
+
+node_js:
+  - "6.9"
+
+before_install:
+  - time npm i -g yarn@0.16.1 --cache-min 9999999999
+
+install:
+  - time yarn
+
+script:
+  - npm run build
+
+after_success:
+  - npm run coveralls
