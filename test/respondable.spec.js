@@ -31,7 +31,7 @@ test('index.js', (t) => {
 });
 
 test.serial('validateInput', (t) => {
-  t.plan(15);
+  t.plan(18);
 
   global.window = undefined;
   // validateInput should be a function.
@@ -85,13 +85,16 @@ test.serial('validateInput', (t) => {
     query3: 'c',
   };
   const correctPriorities = [
+    ['a', 'b'],
+    ['c'],
     ['a', 'b', 'c'],
     ['b', 'c', 'a'],
   ];
   const wrongPriorities = [
-    ['a', 'b'],
+    ['d'],
     ['a', 'a', 'a'],
     ['a', 'b', 'c', 'd'],
+    ['a', 'b', 'c', 'a'],
   ];
   t.throws(
     () => validateInput(map, () => {}, true),

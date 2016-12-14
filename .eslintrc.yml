@@ -68,6 +68,9 @@
       - error
       - allowShortCircuit: true
         allowTernary: true
+    no-restricted-syntax:
+      - error
+      - WithStatement
     no-underscore-dangle:
       - error
       - allowAfterThis: true
