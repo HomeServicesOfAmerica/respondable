@@ -6,7 +6,7 @@ A small utility that makes dealing with media queries programmatically a breeze.
 
 respondable doesn't use any `resize` event handlers. Instead it relies on the `addListener` method of the `MediaQueryList` object returned by `matchMedia` (see [docs](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia)).
 
-**Note: `matchMedia` is a hard dependency of respondable. It will only work in instances where both `matchMedia` and `matchMedia.addListener` are supported. (Polyfills are available.)**
+**Note: `matchMedia` is a hard dependency of respondable.**
 
 
 ## Table of contents
@@ -33,28 +33,30 @@ respondable doesn't use any `resize` event handlers. Instead it relies on the `a
 
 ## Documentation
 
-### respondable
-- Parameters: `breakpoints`,  `callback`, and `priority`
-- Returns: `destroy`, a function that will remove registered listeners when invoked.
+### Summary
+Creates a MediaQueryList for each media query in `breakpoints`. A query becoming active or inactive will invoke `callback`. The callback will also be invoked upon initialization. Callback will receive all of the values associated with the active media queries.
 
-Creates a MediaQueryObjectList for each media query in `breakpoints`. A query becoming active or inactive will invoke `callback`. The callback will also be invoked upon initialization. Callback will receive all of the values associated with the active media queries.
+### Parameters
+* **breakpoints** (object)
+  - Keys: Must be media queries excluding the leading characters `@media` as per [matchMedia](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia) specs.
+  - Values: Consumers discretion. Strings are recommended.
 
-#### breakpoints <object>
+* **callback** (function)
+  - Parameter: `active`
+  - Invoked when a query becomes active or inactive and also when the instance is first initialized. `active` is of type Array and populated with each value (from `breakpoints`) corresponding to a matching query (from `breakpoints`).
 
-- Keys: Must be media queries excluding the leading characters `@media` as per [matchMedia](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia) specs.
-- Values: Consumers discretion. Strings are recommended.
+* **priority** (array)
+  - Optional argument. Mainly useful in configurations that contain competing breakpoints (multiple active at a time).
+  - Each item in this array must correspond to a value in the breakpoints object and there may be no duplicates. The precedence of each item is dependent on the array's order. The lower the array index of an item is, the higher the priority.
 
-#### callback <function>
+### Returns
+* **destroy** (function)
+  - A function that will unregister the breakpoint listeners for the instance that returned it.
+  - Returns true if unregistration was successful, false for subsequent calls and failure.
 
-- Parameter: `active`
+## Examples
 
-Invoked when a query becomes active or inactive and also when the instance is first initialized. `active` is of type Array and populated with each value (from `breakpoints`) corresponding to a matching query (from `breakpoints`).
-
-### priority <array> - OPTIONAL
-
-- Each item in this array must correspond to a value in the breakpoints object. There may be no duplicates and each value in the breakpoints object must be accounted for. The precedence of each item is dependent on the array's order. The lower the array index of an item is, the higher the priority.
-
-###### Example for non-competing breakpoints:
+#### Non-competing breakpoints:
 ```js
 const breakpointObject = {
   'screen and (max-width: 413px)': 'smallest',
@@ -64,15 +66,17 @@ const breakpointObject = {
   'screen and (min-width: 1400px)': 'largest',
 };
 
-const destroy = respondable(map, function(active) {
+const callback = function(active) {
   // use value here
-});
+};
+
+const destroy = respondable(map, callback);
 
 // remove registered listeners
 destroy();
 ```
 
-###### Example for competing breakpoints:
+#### Competing breakpoints:
 ```js
 const breakpointObject = {
   'screen and (max-width: 413px)': 'smallest',
@@ -84,9 +88,11 @@ const breakpointObject = {
 
 const priority = ['largest', 'large', 'medium', 'small', 'smallest'];
 
-const destroy = respondable(map, function(active, largest) {
+const callback = function(active, largest) {
   // The second parameter will now always be the largest active query.
-});
+}
+
+const destroy = respondable(map, callback, priority);
 
 // remove registered listeners
 destroy();
@@ -103,6 +109,6 @@ destroy();
 Clone this repo and open `example/demo.html` in your browser to test it out.
 
 ## Contributing
-Contributions are welcome! Should you decide to contribute we ask you:
+Contributions are welcome! Should you decide to contribute we ask that you:
 - Write code that our linter doesn't hate.
-- Write tests that cover any new code and update tests if changes were made to existing code. Code coverage should stay above 90%.
+- Write tests that cover any new code and update tests if changes were made to existing code. We would love it if code coverage stayed at 100%.

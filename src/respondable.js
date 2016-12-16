@@ -88,21 +88,15 @@ export function validateInput(values, onChangeCb, priority) {
   }
 
   if (priority.length) {
-    const prioritySorted = priority.slice().sort();
-    const keysSorted = Object.keys(values).map(k => values[k]).sort();
+    const valueNames = Object.keys(values).map(k => values[k]);
+    const invalid = priority.some(cur =>
+      // Invalid if a priority item isn't present in breakpoints provided, or if it is repeated.
+      !valueNames.includes(cur) || priority.indexOf(cur) !== priority.lastIndexOf(cur));
 
-    if (prioritySorted.length !== keysSorted.length) {
+    if (invalid) {
       throw new Error(
         `The priority array's values didn't correspond to the values of the breakpoint map.`
       );
-    }
-
-    for (let i = 0; i < priority.length; i += 1) {
-      if (prioritySorted[i] !== keysSorted[i]) {
-        throw new Error(
-          `The priority array's values didn't correspond to the values of the breakpoint map.`
-        );
-      }
     }
   }
 }
