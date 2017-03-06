@@ -2,6 +2,8 @@
 
 # respondable
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/ConciergeAuctions/respondable.svg)](https://greenkeeper.io/)
+
 A small utility that makes dealing with media queries programmatically a breeze. `respondable` accepts an object with media query configuration(s) and a callback. The callback will trigger whenever a media query becomes inactive or active, and will have all active media queries passed in.
 
 respondable doesn't use any `resize` event handlers. Instead it relies on the `addListener` method of the `MediaQueryList` object returned by `matchMedia` (see [docs](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia)).
