@@ -10,7 +10,7 @@ install:
   - time yarn
 
 script:
-  - npm run build
+  - npm run test
 
 after_success:
   - npm run coveralls

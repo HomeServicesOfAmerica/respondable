@@ -14,6 +14,7 @@
     "test:watch": "nodemon --exec npm test",
     "coverage-report": "nyc report --reporter=html",
     "coveralls": "nyc report --reporter=lcov && cat ./coverage/lcov.info | coveralls",
+    "prepublish": "npm run test && npm run build"
   },
   "ava": {
     "source": "src",
