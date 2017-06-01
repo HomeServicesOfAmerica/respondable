@@ -15,8 +15,8 @@ type onChangeCb = (
 ) => void;
 
 export type ExtendedMQL = {
-  addListener: () => void;
-  removeListener: () => void;
+  addListener: (queryChangeHandler: Handler) => void;
+  removeListener: (listenerCb: void|Handler) => void;
   matches: boolean;
   value?: string;
 };
