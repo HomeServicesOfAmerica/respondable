@@ -104,6 +104,8 @@ destroy();
 
 - It is recommended to leave no gaps in the `breakpoints` object. It can also be advantageous to set up `breakpoints` in a such a way that there is always a matching query. (Ex: Using breakpoints for 'too small' or 'too big' to cover all of the sizes that aren't meaningful in your application.) This pattern should be more useful than the previously available `default` key in the `breakpoints` object which was only active when there was no matching query.
 
+- In some cases, media queries - and by extension Respondable - will not be applied as expected on mobile devices if the viewport is not set explicitly. This is explained well [here](https://developer.mozilla.org/en-US/docs/Mozilla/Mobile/Viewport_meta_tag). To avoid this, consider including `<meta name="viewport" content="width=device-width >` in the `head` of your `document`.
+
 ## Demo
 
 Clone this repo and open `example/demo.html` in your browser to test it out.

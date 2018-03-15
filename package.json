@@ -43,7 +43,8 @@
   ],
   "contributors": [
     "Brandon Dail <cottoncrypt@gmail.com>",
-    "Nathan Schwartz <nathan.schwartz95@gmail.com>"
+    "Nathan Schwartz <nathan.schwartz95@gmail.com>",
+    "Ari Frankel <ari.l.frankel@gmail.com>"
   ],
   "license": "MIT",
   "devDependencies": {
